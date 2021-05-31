@@ -64,6 +64,7 @@ static void obstype_new(obstype* type, int i, char* name)
     type->rfactor = 1.0;
     type->nlobsmax = -1;
     type->estdmin = 0.0;
+    type->has_angles = 0;
     type->can_thin = 1;
     type->vid = -1;
     type->gridid = -1;

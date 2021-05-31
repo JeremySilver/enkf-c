@@ -41,6 +41,7 @@ typedef struct {
     double rfactor;
     int nlobsmax;
     double estdmin;
+    int has_angles;
 
     int vid;
     int gridid;

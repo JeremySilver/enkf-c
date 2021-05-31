@@ -153,6 +153,7 @@ observations* obs_create(void)
     obs->data = NULL;
     obs->compacted = 0;
     obs->has_nonpointobs = 0;
+    obs->has_angles = 0;
     obs->ngood = 0;
     obs->noutside_grid = 0;
     obs->noutside_obsdomain = 0;
@@ -743,6 +744,19 @@ void obs_read(observations* obs, char fname[])
         for (i = 0; i < (int) nobs; ++i)
             obs->data[i].lat = ((float*) v)[i];
 
+        if (ncw_var_exists(ncid, "sensor_zenith")) {
+            obs->has_angles = 1;
+	    ncw_inq_varid(ncid, "sensor_azimuth", &varid);
+	    ncw_get_var_float(ncid, varid, v);
+	    for (i = 0; i < (int) nobs; ++i)
+	      obs->data[i].sensor_azimuth = ((float*) v)[i];
+
+	    ncw_inq_varid(ncid, "sensor_zenith", &varid);
+	    ncw_get_var_float(ncid, varid, v);
+	    for (i = 0; i < (int) nobs; ++i)
+	      obs->data[i].sensor_zenith = ((float*) v)[i];
+	}
+
         ncw_inq_varid(ncid, "depth", &varid);
         ncw_get_var_float(ncid, varid, v);
         for (i = 0; i < (int) nobs; ++i)
@@ -939,6 +953,18 @@ void obs_write(observations* obs, char fname[])
      */
     ncw_def_var(ncid, "lat", NC_FLOAT, 1, dimid_nobs, &varid);
     ncw_put_att_text(ncid, varid, "long_name", "observation latitude");
+    if (obs->has_angles) {
+      /*
+`       * sensor_azimuth
+       */
+      ncw_def_var(ncid, "sensor_azimuth", NC_FLOAT, 1, dimid_nobs, &varid);
+      ncw_put_att_text(ncid, varid, "long_name", "sensor azimuth angle (radians)");
+      /*
+       * sensor_zenith
+       */
+      ncw_def_var(ncid, "sensor_zenith", NC_FLOAT, 1, dimid_nobs, &varid);
+      ncw_put_att_text(ncid, varid, "long_name", "sensor zenith angle (radians)");
+    }
     /*
      * depth
      */
@@ -1064,6 +1090,19 @@ void obs_write(observations* obs, char fname[])
     for (i = 0; i < obs->nobs; ++i)
         ((float*) v)[i] = obs->data[i].lat;
     ncw_put_var_float(ncid, varid, v);
+
+    if (obs->has_angles) {
+      ncw_inq_varid(ncid, "sensor_azimuth", &varid);
+      for (i = 0; i < obs->nobs; ++i)
+        ((float*) v)[i] = obs->data[i].sensor_azimuth;
+      ncw_put_var_float(ncid, varid, v);
+
+      ncw_inq_varid(ncid, "sensor_zenith", &varid);
+      for (i = 0; i < obs->nobs; ++i)
+        ((float*) v)[i] = obs->data[i].sensor_zenith;
+      ncw_put_var_float(ncid, varid, v);
+    }
+
 
     ncw_inq_varid(ncid, "depth", &varid);
     for (i = 0; i < obs->nobs; ++i)
@@ -1191,6 +1230,7 @@ void obs_superob(observations* obs, __compar_d_fn_t cmp_obs, observations** sobs
     observation* data = obs->data;
     observation* sdata = NULL;
     int has_nonpointobs = 0;
+    int has_angles = 0;
 
     qsort_r(obs->data, obs->ngood, sizeof(observation), cmp_obs, obs);
 

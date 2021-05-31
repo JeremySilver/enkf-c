@@ -49,6 +49,8 @@ typedef struct {
     float footprint;
     float lon;
     float lat;
+    float sensor_azimuth; // sensor azimuth angle: units = radians
+    float sensor_zenith;  // sensor zenith angle: units = radians
     float depth;
     float model_depth;
     float fi;
@@ -91,6 +93,7 @@ typedef struct {
     observation* data;
     int compacted;
     int has_nonpointobs;
+    int has_angles; // sensor zenith & azimuth
 
     int ngood;
     int noutside_grid;
